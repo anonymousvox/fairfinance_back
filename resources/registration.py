@@ -6,6 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from action.notification_user import NotificationUser
 from action.generate_password import generate_password
 from constant import user_constant
+from action.get_password_platform import GetPasswordPlatform
+
 import hashlib
 
 api = Namespace('auth', description='Auth user service', path='/registration')
@@ -65,7 +67,8 @@ class UserAuth(Resource):
     def post(self):
         try:
             password = generate_password()
-            password_hash_md5 = hashlib.md5(password.encode()).hexdigest()
+            get_password_password = GetPasswordPlatform(password=password)
+            password_hash_md5 = get_password_password.get()
             api.payload['password'] = password_hash_md5
             user: User = User(**api.payload)
             db.session.add(user)

@@ -2,6 +2,7 @@ from flask import abort
 from flask_restx import Namespace, Resource, fields
 from models.model_user import User, db
 from sqlalchemy.exc import IntegrityError
+from action.get_password_platform import GetPasswordPlatform
 import hashlib
 
 api = Namespace('auth', description='Auth user service', path='/auth')
@@ -32,14 +33,13 @@ class UserAuth(Resource):
         try:
             password = api.payload.get('password')
             phone = api.payload.get('phone')
-            password_hash_md5 = hashlib.md5(password.encode()).hexdigest()
+            get_password_password = GetPasswordPlatform(password=password)
+            password_hash_md5 = get_password_password.get()
             user = User.query.filter_by(phone=phone).filter_by(password=password_hash_md5).first()
-            print(user, password_hash_md5)
             return user, 201
         except IntegrityError as e:
             db.session.rollback()
             return abort(400, "User with login already exists")
         except Exception as e:
-            print(e)
             db.session.rollback()
             return abort(400, "Failed register user")
